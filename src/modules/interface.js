@@ -2,11 +2,13 @@ import Terminal from "terminal-kit";
 
 import { packageConfig } from '../config.js';
 
+const mediaPlayerProcessMonitorAllowed = !(process.platform === 'ios' || process.platform === 'android')
+
 export default class Interface {
     term;
     cb;
     /**
-     * @param {Terminal.Terminal} term 
+     * @param {Terminal.Terminal} term
      * @param {Object} cb
      */
     constructor(term, cb) {
@@ -157,6 +159,6 @@ export class VLCExitInterface extends Interface {
 
 export class PlayingInterface extends Interface {
     Init() {
-        this.term.white(process.platform === 'android' ? 'Trying to play: ' : 'Currently playing: ').blue(this.cb.getCurrentTitle.call(this).title).white(' ').green(this.cb.getCurrentEpisode.call(this).episode + '/' + this.cb.getEpisodes.call(this).length).white('\n');
+        this.term.white(mediaPlayerProcessMonitorAllowed ? 'Currently playing: ' : 'Trying to play: ')).blue(this.cb.getCurrentTitle.call(this).title).white(' ').green(this.cb.getCurrentEpisode.call(this).episode + '/' + this.cb.getEpisodes.call(this).length).white('\n');
     }
 }
