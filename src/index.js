@@ -220,14 +220,13 @@ function playVideo(interfaces, options) {
     function onExit() {
         showVLCExitInterface({...interfaces, playingInterface}, options);
     }
-
-    processUtil.openURL(config.get('processUtil.launcher'), config.get('processUtil.launcherArgs').split(' '), options.fileURL)
+    processUtil.openURL(config.get('processUtil.launcher'), config.get('processUtil.launcherArgs')?.split(' '), options.fileURL)
         .then(onExit)
         .catch(() => {
             // VLC is not installed
             processUtil.openDefaultApplication(options.fileURL)
                 .then(onExit)
-                .catch(() => {
+                .catch((e) => { console.error(e);process.abort()
                     Terminal.terminal.clear();
                     Terminal.terminal.error('VLC is not installed, please install it first.');
                     process.exit(1);
@@ -235,7 +234,7 @@ function playVideo(interfaces, options) {
         });
 }
 
-function showVLCExitInterface(interfaces, options) {        
+function showVLCExitInterface(interfaces, options) {
     const vlcExitInterface = new VLCExitInterface(Terminal.terminal, {
         playNextEpisode: () => {
             if (options.selectedEpisode.episode >= options.availableEpisodes.length) {

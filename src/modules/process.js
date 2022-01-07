@@ -1,5 +1,6 @@
 import child_process from 'child_process';
-
+import { writeFileSync } from 'fs';
+import { createProxy } from './http-proxy.js'
 const debugging = {
     forceRejectVLCInstalled: false
 }
@@ -21,8 +22,8 @@ export function getStartCommandLineForCurrentOS(filePath) {
 export function openURL(executable, args, url) {
     return new Promise(async(resolve, reject) => {
         if (
-            process.platform === 'android' || 
-            executable === null || 
+            process.platform === 'android' ||
+            executable === null ||
             debugging.forceRejectVLCInstalled
         ) {
             reject();
@@ -38,11 +39,16 @@ export function openDefaultApplication(url) {
     }
     return new Promise((resolve) => {
         if (process.platform === 'android') {
-            child_process.spawnSync('/data/data/com.termux/files/usr/bin/am',
-                ['start', '-W', '-S', '-n', 'org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity','-a', 'android.intent.action.VIEW', '-d', url],
+            const { server, token } = createProxy()
+            server.once('listening',() => {
+            console.log(server.address().port)
+            console.log(`http://127.0.0.1:${server.address().port}/proxy?token=${token}&url=${encodeURIComponent(url)}`)
+            const e = child_process.spawnSync('/data/data/com.termux/files/usr/bin/am',
+                ['start', '-W', '-S', '-n', 'org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity','-a', 'android.intent.action.VIEW', '-d', `http://127.0.0.1:${server.address().port}/proxy?token=${token}&url=${encodeURIComponent(url)}`],
                 {stdio:'inherit'}
             )
-            resolve();
+            setTimeout(() => resolve(),20000)
+           })
             return;
         }
         child_process.exec(getStartCommandLineForCurrentOS(url)).on('close', () => resolve());
